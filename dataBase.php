@@ -23,8 +23,6 @@ class DatabaseConnection implements IProductManager, IShoppingCartManager
 
     public function __construct()
     {
-
-
         $servername = 'localhost'; // Hostname oder IP-Adresse des MySQL-Servers
         $username = 'root';        // Benutzername für die MySQL-Datenbank
         $password = '';            // Passwort für die MySQL-Datenbank
@@ -42,6 +40,9 @@ class DatabaseConnection implements IProductManager, IShoppingCartManager
         $statement->bindParam(':price', $price);
 
         $statement->execute();
+
+        $last_id = $this->conn->lastInsertId();
+        return $last_id;
     }
 
     public function getProducts()
@@ -60,12 +61,16 @@ class DatabaseConnection implements IProductManager, IShoppingCartManager
         $statement->execute();
 
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-        return $result[0];
+
+        if (count($result) > 0) {
+            return $result[0];
+        } else {
+            return null;
+        }
     }
 
     public function deleteProduct(int $productId)
     {
-        var_dump($productId);
         $statement = $this->conn->prepare("DELETE FROM products WHERE id = :id");
         $statement->bindParam(':id', $productId);
         $statement->execute();
