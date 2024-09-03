@@ -23,11 +23,11 @@ class DatabaseConnection implements IProductManager, IShoppingCartManager
 
     public function __construct()
     {
-        $servername = 'localhost'; // Hostname oder IP-Adresse des MySQL-Servers
-        $username = 'root';        // Benutzername für die MySQL-Datenbank
-        $password = '';            // Passwort für die MySQL-Datenbank
-        $dbname = 'online-shop'; // Name der MySQL-Datenbank
-        $this->conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+        // $servername = 'localhost'; // Hostname oder IP-Adresse des MySQL-Servers
+        // $username = 'root';        // Benutzername für die MySQL-Datenbank
+        // $password = '';            // Passwort für die MySQL-Datenbank
+        // $dbname = 'online-shop'; // Name der MySQL-Datenbank
+        $this->conn = new PDO("sqlite:./datenbank.db");
         // PDO Fehler-Modus auf Exception setzen
         $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }

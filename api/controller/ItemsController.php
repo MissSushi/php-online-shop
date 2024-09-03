@@ -17,6 +17,7 @@ class ItemsController implements IRestController
     {
         $this->db = new DatabaseConnection();
     }
+
     public function createItem(mixed $item)
     {
 
