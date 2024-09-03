@@ -13,6 +13,11 @@ $requestUri = explode('?', $requestUri)[0];
 if (!str_ends_with($requestUri, '/')) $requestUri .= '/';
 
 // Routing
+if ($requestMethod === 'OPTIONS') {
+    header("HTTP/1.1 200 OK");
+    exit(0);
+}
+
 if (preg_match('/^\/api\/items\/(\d+)\/$/', $requestUri, $matches)) {
     $itemId = $matches[1];
     handleItem($requestMethod, $itemId, $requestData);
