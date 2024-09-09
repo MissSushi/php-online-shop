@@ -1,23 +1,21 @@
 <?php
-
-
 interface IProductManager
 {
-    public function addProduct(string $name, string $description, int $price);
+    public function addProduct(string $name, string $description, int $price, int $status);
     public function getProducts();
     public function deleteProduct(int $productId);
     public function getProduct(int $productId);
-    public function editProduct(int $productId, string $name, string $description, int $price);
+    public function editProduct(int $productId, string $name, string $description, int $price, int $status);
 }
 
-interface IShoppingCartManager
-{
-    public function addToShoppingCart(int $productId);
-    public function getShoppingCartCount();
-    public function getShoppingCartProducts();
-}
+// interface IShoppingCartManager
+// {
+//     public function addToShoppingCart(int $productId);
+//     public function getShoppingCartCount();
+//     public function getShoppingCartProducts();
+// }
 
-class DatabaseConnection implements IProductManager, IShoppingCartManager
+class DatabaseConnection implements IProductManager
 {
     private PDO $conn;
 
@@ -32,12 +30,13 @@ class DatabaseConnection implements IProductManager, IShoppingCartManager
         $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
-    public function addProduct(string $description, string $name, int $price)
+    public function addProduct(string $description, string $name, int $price, int $status)
     {
-        $statement = $this->conn->prepare("INSERT INTO products (description, productName, price) VALUES (:description, :productName, :price)");
+        $statement = $this->conn->prepare("INSERT INTO products (description, productName, price, status) VALUES (:description, :productName, :price, :status)");
         $statement->bindParam(':description', $description);
         $statement->bindParam(':productName', $name);
         $statement->bindParam(':price', $price);
+        $statement->bindParam(':status', $status);
 
         $statement->execute();
 
@@ -47,7 +46,7 @@ class DatabaseConnection implements IProductManager, IShoppingCartManager
 
     public function getProducts()
     {
-        $statement = $this->conn->prepare("SELECT productName, description, price, id FROM products");
+        $statement = $this->conn->prepare("SELECT productName, description, price, id, status FROM products");
         $statement->execute();
 
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -56,7 +55,7 @@ class DatabaseConnection implements IProductManager, IShoppingCartManager
 
     public function getProduct(int $productId)
     {
-        $statement = $this->conn->prepare("SELECT productName, description, price, id FROM products WHERE id = :id");
+        $statement = $this->conn->prepare("SELECT productName, description, price, id, status FROM products WHERE id = :id");
         $statement->bindParam(':id', $productId);
         $statement->execute();
 
@@ -76,52 +75,53 @@ class DatabaseConnection implements IProductManager, IShoppingCartManager
         $statement->execute();
     }
 
-    public function editProduct(int $productId, string $name, string $description, int $price)
+    public function editProduct(int $productId, string $name, string $description, int $price, int $status)
     {
-        $statement = $this->conn->prepare("UPDATE products SET productName = :productName, description = :description, price = :price WHERE id = :id");
+        $statement = $this->conn->prepare("UPDATE products SET productName = :productName, description = :description, price = :price, status = :status WHERE id = :id");
         $statement->bindParam(':id', $productId);
         $statement->bindParam(':productName', $name);
         $statement->bindParam(':description', $description);
         $statement->bindParam(':price', $price);
+        $statement->bindParam(':status', $status);
 
         $statement->execute();
     }
 
-    public function addToShoppingCart(int $productId)
-    {
-        $shoppingCartDataStatement = $this->conn->prepare('SELECT quantity FROM shoppingcart WHERE productId = :productId');
-        $shoppingCartDataStatement->bindParam(':productId', $productId);
-        $shoppingCartDataStatement->execute();
-        $shoppingCartData = $shoppingCartDataStatement->fetchAll(PDO::FETCH_ASSOC);
+    // public function addToShoppingCart(int $productId)
+    // {
+    //     $shoppingCartDataStatement = $this->conn->prepare('SELECT quantity FROM shoppingcart WHERE productId = :productId');
+    //     $shoppingCartDataStatement->bindParam(':productId', $productId);
+    //     $shoppingCartDataStatement->execute();
+    //     $shoppingCartData = $shoppingCartDataStatement->fetchAll(PDO::FETCH_ASSOC);
 
-        if (!empty($shoppingCartData)) {
-            $newQuantity = $shoppingCartData[0]['quantity'] + 1;
+    //     if (!empty($shoppingCartData)) {
+    //         $newQuantity = $shoppingCartData[0]['quantity'] + 1;
 
-            $statement = $this->conn->prepare('UPDATE shoppingcart SET quantity = :quantity WHERE productId = :productId');
-            $statement->bindParam(':productId', $productId);
-            $statement->bindParam(':quantity', $newQuantity);
-            $statement->execute();
-        } else {
-            $statement = $this->conn->prepare("INSERT INTO shoppingcart (productId, quantity) VALUES (:productId, 1)");
-            $statement->bindParam(':productId', $productId);
-            $statement->execute();
-        }
-    }
+    //         $statement = $this->conn->prepare('UPDATE shoppingcart SET quantity = :quantity WHERE productId = :productId');
+    //         $statement->bindParam(':productId', $productId);
+    //         $statement->bindParam(':quantity', $newQuantity);
+    //         $statement->execute();
+    //     } else {
+    //         $statement = $this->conn->prepare("INSERT INTO shoppingcart (productId, quantity) VALUES (:productId, 1)");
+    //         $statement->bindParam(':productId', $productId);
+    //         $statement->execute();
+    //     }
+    // }
 
-    public function getShoppingCartCount()
-    {
-        $statement = $this->conn->prepare('SELECT COUNT(productId) AS count FROM shoppingcart');
-        $statement->execute();
-        $count = $statement->fetchAll(PDO::FETCH_ASSOC);
-        return $count[0]['count'];
-    }
+    // public function getShoppingCartCount()
+    // {
+    //     $statement = $this->conn->prepare('SELECT COUNT(productId) AS count FROM shoppingcart');
+    //     $statement->execute();
+    //     $count = $statement->fetchAll(PDO::FETCH_ASSOC);
+    //     return $count[0]['count'];
+    // }
 
-    public function getShoppingCartProducts()
-    {
-        $statement = $this->conn->prepare('SELECT p.description, p.productName, p.price, s.quantity FROM shoppingcart s LEFT JOIN products p 
-        ON s.productId = p.id ORDER BY s.productId');
-        $statement->execute();
-        $shoppingCartEntries = $statement->fetchAll(PDO::FETCH_ASSOC);
-        return $shoppingCartEntries;
-    }
+    // public function getShoppingCartProducts()
+    // {
+    //     $statement = $this->conn->prepare('SELECT p.description, p.productName, p.price, s.quantity FROM shoppingcart s LEFT JOIN products p 
+    //     ON s.productId = p.id ORDER BY s.productId');
+    //     $statement->execute();
+    //     $shoppingCartEntries = $statement->fetchAll(PDO::FETCH_ASSOC);
+    //     return $shoppingCartEntries;
+    // }
 }

@@ -24,8 +24,9 @@ class ItemsController implements IRestController
         $description = $item["description"];
         $price = $item["price"];
         $name = $item["name"];
+        $status = $item["status"];
 
-        $lastId = $this->db->addProduct($description, $name, $price);
+        $lastId = $this->db->addProduct($description, $name, $price, $status);
         echo json_encode([
             'id' => (int)$lastId
         ]);
@@ -55,8 +56,9 @@ class ItemsController implements IRestController
         $description = $item["description"];
         $price = $item["price"];
         $name = $item["name"];
+        $status = $item["status"];
 
-        $this->db->editProduct($id, $name, $description, $price);
+        $this->db->editProduct($id, $name, $description, $price, $status);
     }
 
     public function deleteItem(int $id)

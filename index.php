@@ -15,12 +15,9 @@
 
     $db = new DatabaseConnection();
 
-    $count = $db->getShoppingCartCount();
+    // $count = $db->getShoppingCartCount();
 
     ?>
-
-    <a href="/add/">Produkt hinzufügen</a>
-    <a href="./shopping-cart">Warenkorb </a><span>(<?php echo $count ?>)</span>
 
     <?php
     require_once 'dataBase.php';
