@@ -2,7 +2,7 @@
 interface IProductManager
 {
     public function addProduct(string $name, string $description, int $price, int $status);
-    public function getProducts();
+    public function getProducts(int $offset, int $limit, string $sort, string $filter, string $search);
     public function deleteProduct(int $productId);
     public function getProduct(int $productId);
     public function editProduct(int $productId, string $name, string $description, int $price, int $status);
@@ -44,9 +44,56 @@ class DatabaseConnection implements IProductManager
         return $last_id;
     }
 
-    public function getProducts()
+    public function getCount(string $sort, string $filter, string $search)
     {
-        $statement = $this->conn->prepare("SELECT productName, description, price, id, status FROM products");
+        $validSortColumns = [
+            'id' => 'id',
+            'name' => 'productName',
+            'price' => 'price',
+        ];
+
+        if (!array_key_exists($sort, $validSortColumns)) {
+            $sort = 'id';
+        }
+
+        if ($filter == "active") {
+            $statement = $this->conn->prepare("SELECT COUNT(*) AS count FROM products WHERE status = 1 AND (id = :search OR productName LIKE :searchPattern)");
+        } elseif ($filter == "inactive") {
+            $statement = $this->conn->prepare("SELECT COUNT(*) AS count FROM products WHERE status = 0 AND (id = :search OR productName LIKE :searchPattern)");
+        } else {
+            $statement = $this->conn->prepare("SELECT COUNT(*) AS count FROM products WHERE (id = :search OR productName LIKE :searchPattern)");
+        }
+        $statement->bindValue(':searchPattern', "%$search%", PDO::PARAM_STR);
+        $statement->bindValue(':search', $search, PDO::PARAM_INT);
+        $statement->execute();
+
+        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $result[0]['count'];
+    }
+
+    public function getProducts(int $offset, int $limit, string $sort, string $filter, string $search)
+    {
+        $validSortColumns = [
+            'id' => 'id',
+            'name' => 'productName',
+            'price' => 'price',
+        ];
+
+        if (!array_key_exists($sort, $validSortColumns)) {
+            $sort = 'id';
+        }
+
+        if ($filter == "active") {
+            $statement = $this->conn->prepare("SELECT productName, description, price, id, status FROM products WHERE status = 1 AND (id = :search OR productName LIKE :searchPattern) ORDER BY " . $validSortColumns[$sort] . " LIMIT :limit OFFSET :offset");
+        } elseif ($filter == "inactive") {
+            $statement = $this->conn->prepare("SELECT productName, description, price, id, status FROM products WHERE status = 0 AND (id = :search OR productName LIKE :searchPattern) ORDER BY " . $validSortColumns[$sort] . " LIMIT :limit OFFSET :offset");
+        } else {
+            $statement = $this->conn->prepare("SELECT productName, description, price, id, status FROM products WHERE (id = :search OR productName LIKE :searchPattern) ORDER BY " . $validSortColumns[$sort] . " LIMIT :limit OFFSET :offset");
+        }
+        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $statement->bindValue(':searchPattern', "%$search%", PDO::PARAM_STR);
+        $statement->bindValue(':search', $search, PDO::PARAM_INT);
         $statement->execute();
 
         $result = $statement->fetchAll(PDO::FETCH_ASSOC);

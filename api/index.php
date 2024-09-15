@@ -32,9 +32,25 @@ function handleItems(string $method, mixed $item)
 {
     $controller = new ItemsController();
 
+
     switch ($method) {
         case "GET":
-            $controller->readAll();
+            if (isset($_GET['limit']) && isset($_GET['page']) && isset($_GET['sortBy']) && isset($_GET['filterBy']) && isset($_GET['search'])) {
+                $limit = intval($_GET['limit']);
+                $page = intval($_GET['page']);
+                $sort = strval($_GET['sortBy']);
+                $filter = strval($_GET['filterBy']);
+                $search = strval($_GET['search']);
+
+                $offset = ($page - 1) * $limit;
+            } else {
+                var_dump($_GET);
+                echo "Fehler: limit, sortBy oder page fehlen.";
+                header("HTTP/1.1 400 Bad Request");
+                die;
+            }
+
+            $controller->readAll($offset, $limit, $sort, $filter, $search);
             break;
         case "POST":
             $controller->createItem($item);
