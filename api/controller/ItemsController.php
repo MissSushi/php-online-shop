@@ -4,7 +4,7 @@ require_once "../dataBase.php";
 interface IRestController
 {
     public function createItem(mixed $item);
-    public function readAll();
+    public function readAll(int $offset, int $limit, string $sort, string $filter, string $search);
     public function readItem(int $id);
     public function updateItem(int $id, mixed $item);
     public function deleteItem(int $id);
@@ -32,11 +32,17 @@ class ItemsController implements IRestController
         ]);
     }
 
-    public function readAll()
+    public function readAll(int $offset, int $limit, string $sort, string $filter, string $search)
     {
         header('Content-Type: application/json');
-        $result = $this->db->getProducts();
-        echo json_encode($result);
+        $products = $this->db->getProducts($offset, $limit, $sort, $filter, $search);
+        $countProducts = $this->db->getCount($sort, $filter, $search);
+        $countPages = ceil($countProducts / $limit);
+        echo json_encode([
+            'count' => $countProducts,
+            'countPages' => $countPages,
+            'products' => $products
+        ]);
     }
 
     public function readItem(int $id)
