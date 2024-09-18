@@ -8,6 +8,21 @@ interface IProductManager
     public function editProduct(int $productId, string $name, string $description, int $price, int $status);
 }
 
+// TODO
+// 1. Neue funtion anlegen: addImage
+// 2. base64 zu file konvertieren
+// 3. Datei in Ordner ablegen
+// 4. Image in DB abspeichern und id zurück geben
+// 5. Id weiter an addCategory reichen
+// 6. Kategorie in Datenbank speichern mit id 
+
+interface ICategoryManager
+{
+    public function addCategory(string $category, int $status, string $description, int $fileId);
+    public function addFile(string $file, string $fileName);
+    public function getFilePath(int $fileId);
+}
+
 // interface IShoppingCartManager
 // {
 //     public function addToShoppingCart(int $productId);
@@ -15,9 +30,38 @@ interface IProductManager
 //     public function getShoppingCartProducts();
 // }
 
-class DatabaseConnection implements IProductManager
+class DatabaseConnection implements IProductManager, ICategoryManager
 {
     private PDO $conn;
+
+    public function getFilePath(int $fileId)
+    {
+        $statement = $this->conn->prepare("SELECT filePath FROM files WHERE id = :id");
+        $statement->bindParam(':id', $fileId);
+        $statement->execute();
+
+        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if (count($result) > 0) {
+            return $result[0]["filePath"];
+        } else {
+            return null;
+        }
+    }
+
+    public function addFile(string $fileContentsBase64, string $fileName)
+    {
+        $data = explode(',', $fileContentsBase64);
+        file_put_contents('../images/' . $fileName, base64_decode($data[1]));
+        $filePath = realpath('../images/' . $fileName);
+
+        $statement = $this->conn->prepare("INSERT INTO files (filePath) VALUES (:filePath)");
+        $statement->bindParam(':filePath', $filePath);
+        $statement->execute();
+
+        $last_id = $this->conn->lastInsertId();
+        return $last_id;
+    }
 
     public function __construct()
     {
@@ -37,6 +81,21 @@ class DatabaseConnection implements IProductManager
         $statement->bindParam(':productName', $name);
         $statement->bindParam(':price', $price);
         $statement->bindParam(':status', $status);
+
+        $statement->execute();
+
+        $last_id = $this->conn->lastInsertId();
+        return $last_id;
+    }
+
+    public function addCategory(string $category, int $status, string $description, int $fileId)
+    {
+
+        $statement = $this->conn->prepare("INSERT INTO categories (name, status, description, fileId) VALUES (:name, :status, :description, :fileId)");
+        $statement->bindParam(':name', $category);
+        $statement->bindParam(':status', $status);
+        $statement->bindParam(':description', $description);
+        $statement->bindParam(':fileId', $fileId);
 
         $statement->execute();
 
