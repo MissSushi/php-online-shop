@@ -18,17 +18,62 @@ if ($requestMethod === 'OPTIONS') {
     exit(0);
 }
 
-if (preg_match('/^\/api\/items\/(\d+)\/$/', $requestUri, $matches)) {
+if (preg_match('/^\/api\/categories\/(\d+)\/$/', $requestUri, $matches)) {
+    $categoryId = $matches[1];
+    handleCategory($requestMethod, $categoryId, $requestData);
+} elseif ($requestUri === '/api/categories/') {
+    handleCategories($requestMethod, $requestData);
+} elseif (preg_match('/^\/api\/products\/(\d+)\/$/', $requestUri, $matches)) {
     $itemId = $matches[1];
-    handleItem($requestMethod, $itemId, $requestData);
-} elseif ($requestUri === '/api/items/') {
-    handleItems($requestMethod, $requestData);
+    handleProduct($requestMethod, $itemId, $requestData);
+} elseif ($requestUri === '/api/products/') {
+    handleProducts($requestMethod, $requestData);
+} elseif (preg_match('/^\/api\/images\/(\d+)\/$/', $requestUri, $matches)) {
+    $itemId = $matches[1];
+    handleFile($requestMethod, $itemId);
+    echo $requestData;
 } else {
     header("HTTP/1.1 404 Not Found");
     echo json_encode(["message" => "Endpoint not found"]);
 }
 
-function handleItems(string $method, mixed $item)
+function handleCategory(string $method, int $categoryId, mixed $category)
+{
+    $controller = new ItemsController();
+
+    switch ($method) {
+        case "GET":
+            break;
+        case "PUT":
+            break;
+        case "DELETE":
+            break;
+    }
+}
+
+function handleCategories(string $method, mixed $category)
+{
+    $controller = new ItemsController();
+
+    switch ($method) {
+        case "POST":
+            $controller->createCategory($category);
+            break;
+    }
+}
+
+function handleFile(string $method, int $fileId)
+{
+    $controller = new ItemsController();
+
+    switch ($method) {
+        case "GET":
+            $controller->readFile($fileId);
+            break;
+    }
+}
+
+function handleProducts(string $method, mixed $item)
 {
     $controller = new ItemsController();
 
@@ -50,10 +95,10 @@ function handleItems(string $method, mixed $item)
                 die;
             }
 
-            $controller->readAll($offset, $limit, $sort, $filter, $search);
+            $controller->readAllProducts($offset, $limit, $sort, $filter, $search);
             break;
         case "POST":
-            $controller->createItem($item);
+            $controller->createProduct($item);
             break;
         default:
             header("HTTP/1.1 405 Method not allowed");
@@ -62,19 +107,19 @@ function handleItems(string $method, mixed $item)
     }
 }
 
-function handleItem(string $method, int $id, mixed $item)
+function handleProduct(string $method, int $id, mixed $item)
 {
     $controller = new ItemsController();
 
     switch ($method) {
         case "GET":
-            $controller->readItem($id);
+            $controller->readProduct($id);
             break;
         case "PUT":
-            $controller->updateItem($id, $item);
+            $controller->updateProduct($id, $item);
             break;
         case "DELETE":
-            $controller->deleteItem($id);
+            $controller->deleteProduct($id);
             break;
         default:
             header("HTTP/1.1 405 Method not allowed");
